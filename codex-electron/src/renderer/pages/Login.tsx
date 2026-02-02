@@ -46,6 +46,14 @@ export const Login: React.FC = () => {
         if (accountInfo.loggedIn) {
           const limits = await window.codex.rateLimitsRead();
           setRateLimits(limits);
+          
+          // If logged in and has workbook, redirect to home
+          // If logged in but no workbook, redirect to workbook selector
+          if (accountInfo.currentWorkbook) {
+            navigate('/');
+          } else {
+            navigate('/select-workbook');
+          }
         }
       } catch (err) {
         console.error('Failed to check account:', err);
@@ -69,15 +77,15 @@ export const Login: React.FC = () => {
     });
 
     return unsubscribe;
-  }, []);
+  }, [navigate]);
 
   const handleOAuthLogin = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const result = await window.codex.loginStart({ method: 'oauth' });
-      if (result.url) {
+      const result = await window.codex.loginStart({ type: 'chatgpt' });
+      if (result.type === 'chatgpt' && result.authUrl) {
         setWaitingForOAuth(true);
         // Browser will be opened automatically by main process
       }
@@ -94,7 +102,7 @@ export const Login: React.FC = () => {
 
     try {
       await window.codex.loginStart({
-        method: 'apiKey',
+        type: 'apiKey',
         apiKey: values.apiKey,
       });
 
@@ -105,6 +113,9 @@ export const Login: React.FC = () => {
       if (accountInfo.loggedIn) {
         const limits = await window.codex.rateLimitsRead();
         setRateLimits(limits);
+        
+        // Redirect to workbook selector after successful login
+        navigate('/select-workbook');
       }
     } catch (err: any) {
       setError(err.message || 'Invalid API key');
@@ -144,7 +155,7 @@ export const Login: React.FC = () => {
           <div style={styles.header}>
             <CheckCircleOutlined style={{ fontSize: 48, color: '#52c41a' }} />
             <Title level={3} style={{ marginTop: 16 }}>
-              You're logged in
+              已登录
             </Title>
           </div>
 
@@ -153,7 +164,7 @@ export const Login: React.FC = () => {
               <div style={styles.infoRow}>
                 <UserOutlined />
                 <div>
-                  <Text strong>{account.name || 'User'}</Text>
+                  <Text strong>{account.name || '用户'}</Text>
                   <br />
                   <Text type="secondary">{account.email}</Text>
                 </div>
@@ -161,7 +172,7 @@ export const Login: React.FC = () => {
 
               {rateLimits && rateLimits.limits.length > 0 && (
                 <div style={styles.rateLimits}>
-                  <Text type="secondary">Usage</Text>
+                  <Text type="secondary">使用情况</Text>
                   {rateLimits.limits.map((limit) => (
                     <div key={limit.name} style={styles.limitRow}>
                       <Text style={{ fontSize: 12 }}>{limit.name}</Text>
@@ -181,11 +192,14 @@ export const Login: React.FC = () => {
           </div>
 
           <Space direction="vertical" style={{ width: '100%' }} size="middle">
+            <Button block type="primary" onClick={() => navigate('/select-workbook')}>
+              选择工作簿
+            </Button>
             <Button block onClick={() => navigate('/')}>
-              Go to Sessions
+              进入会话
             </Button>
             <Button block danger onClick={handleLogout} loading={loading}>
-              Logout
+              退出登录
             </Button>
           </Space>
         </Card>
@@ -201,15 +215,15 @@ export const Login: React.FC = () => {
           <div style={styles.header}>
             <Spin indicator={<LoadingOutlined style={{ fontSize: 48 }} spin />} />
             <Title level={3} style={{ marginTop: 16 }}>
-              Waiting for login
+              等待登录
             </Title>
             <Paragraph type="secondary">
-              Complete the login in your browser, then return here.
+              请在浏览器中完成登录，然后返回此处。
             </Paragraph>
           </div>
 
           <Button block onClick={handleCancelOAuth}>
-            Cancel
+            取消
           </Button>
         </Card>
       </div>
@@ -227,9 +241,9 @@ export const Login: React.FC = () => {
             style={{ width: 48, height: 48 }}
           />
           <Title level={3} style={{ marginTop: 16, marginBottom: 8 }}>
-            Sign in to Codex
+            登录 Codex
           </Title>
-          <Text type="secondary">Choose your login method</Text>
+          <Text type="secondary">选择登录方式</Text>
         </div>
 
         {error && (
@@ -252,20 +266,20 @@ export const Login: React.FC = () => {
           loading={loading && loginMethod === 'oauth'}
           style={{ marginBottom: 16 }}
         >
-          Sign in with ChatGPT
+          使用 ChatGPT 登录
         </Button>
 
-        <Divider>or</Divider>
+        <Divider>或</Divider>
 
         {/* API Key Login */}
         <Form onFinish={handleApiKeyLogin} layout="vertical">
           <Form.Item
             name="apiKey"
-            rules={[{ required: true, message: 'Please enter your API key' }]}
+            rules={[{ required: true, message: '请输入您的 API 密钥' }]}
           >
             <Input.Password
               prefix={<KeyOutlined />}
-              placeholder="Enter your OpenAI API key"
+              placeholder="输入您的 OpenAI API 密钥"
               size="large"
             />
           </Form.Item>
@@ -278,27 +292,27 @@ export const Login: React.FC = () => {
               loading={loading && loginMethod === 'apiKey'}
               onClick={() => setLoginMethod('apiKey')}
             >
-              Sign in with API Key
+              使用 API 密钥登录
             </Button>
           </Form.Item>
         </Form>
 
         <Paragraph type="secondary" style={{ fontSize: 12, textAlign: 'center' }}>
-          By signing in, you agree to the{' '}
+          登录即表示您同意{' '}
           <a
             href="https://openai.com/terms"
             target="_blank"
             rel="noopener noreferrer"
           >
-            Terms of Service
+            服务条款
           </a>{' '}
-          and{' '}
+          和{' '}
           <a
             href="https://openai.com/privacy"
             target="_blank"
             rel="noopener noreferrer"
           >
-            Privacy Policy
+            隐私政策
           </a>
         </Paragraph>
       </Card>

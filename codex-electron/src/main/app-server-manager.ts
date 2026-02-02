@@ -246,6 +246,12 @@ export class AppServerManager extends EventEmitter {
    */
   private handleServerNotification(notification: JSONRPCNotification): void {
     const { method, params } = notification;
+
+    // Newer app-server versions emit these generic event notifications.
+    // They are not currently surfaced in the Electron UI.
+    if (method.startsWith('codex/event/')) {
+      return;
+    }
     
     let serverNotification: ServerNotification | null = null;
 
@@ -284,11 +290,18 @@ export class AppServerManager extends EventEmitter {
         serverNotification = { type: 'accountStatus', payload: params as any };
         break;
       case 'login/completed':
+      case 'account/login/completed':
         serverNotification = { type: 'loginCompleted', payload: params as any };
+        break;
+      case 'authStatusChange':
+        serverNotification = { type: 'accountStatus', payload: params as any };
         break;
       case 'error':
         serverNotification = { type: 'error', payload: params as any };
         break;
+      case 'codex/event/mcp_startup_complete':
+        // Benign notification from newer app-server versions; not currently surfaced in UI.
+        return;
       default:
         console.log('Unhandled notification:', method);
         return;

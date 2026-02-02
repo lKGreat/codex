@@ -34,6 +34,8 @@ import type {
   LoginStartResponse,
   AccountReadResponse,
   RateLimitsReadResponse,
+  WorkbookListResponse,
+  WorkbookSelectParams,
   SkillsListResponse,
   AppsListResponse,
   ExecApprovalResponse,
@@ -97,6 +99,12 @@ const codexAPI: CodexAPI = {
   accountRead: () => ipcRenderer.invoke('codex:account/read') as Promise<AccountReadResponse>,
   rateLimitsRead: () =>
     ipcRenderer.invoke('codex:rateLimits/read') as Promise<RateLimitsReadResponse>,
+
+  // Workbook operations
+  workbookList: () =>
+    ipcRenderer.invoke('codex:workbook/list') as Promise<WorkbookListResponse>,
+  workbookSelect: (params: WorkbookSelectParams) =>
+    ipcRenderer.invoke('codex:workbook/select', params) as Promise<void>,
 
   // Skills & Apps
   skillsList: () => ipcRenderer.invoke('codex:skills/list') as Promise<SkillsListResponse>,

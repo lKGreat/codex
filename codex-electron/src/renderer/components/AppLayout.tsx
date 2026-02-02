@@ -78,20 +78,27 @@ export const AppLayout: React.FC = () => {
   const userMenuItems = [
     {
       key: 'account',
-      label: account?.email || 'Not logged in',
+      label: account?.email || '未登录',
       disabled: true,
     },
     { type: 'divider' as const },
     {
+      key: 'workbook',
+      icon: <UserOutlined />,
+      label: '切换工作簿',
+      onClick: () => navigate('/select-workbook'),
+      disabled: !account?.loggedIn,
+    },
+    {
       key: 'settings',
       icon: <SettingOutlined />,
-      label: 'Settings',
+      label: '设置',
       onClick: () => navigate('/settings'),
     },
     {
       key: 'logout',
       icon: <LogoutOutlined />,
-      label: 'Logout',
+      label: '退出登录',
       onClick: handleLogout,
       disabled: !account?.loggedIn,
     },
@@ -101,12 +108,12 @@ export const AppLayout: React.FC = () => {
     {
       key: '/',
       icon: <MessageOutlined />,
-      label: 'Sessions',
+      label: '会话',
     },
     {
       key: '/settings',
       icon: <SettingOutlined />,
-      label: 'Settings',
+      label: '设置',
     },
   ];
 

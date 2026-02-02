@@ -390,21 +390,38 @@ export interface McpServerConfig {
 }
 
 // Auth
-export interface LoginStartParams {
-  method: 'oauth' | 'apiKey';
-  apiKey?: string;
-}
+export type LoginStartParams = 
+  | { type: 'apiKey'; apiKey: string }
+  | { type: 'chatgpt' }
+  | { type: 'chatgptAuthTokens'; idToken: string; accessToken: string };
 
-export interface LoginStartResponse {
-  url?: string;
-  sessionId?: string;
-}
+export type LoginStartResponse = 
+  | { type: 'apiKey' }
+  | { type: 'chatgpt'; loginId: string; authUrl: string }
+  | { type: 'chatgptAuthTokens' };
 
 export interface AccountReadResponse {
   loggedIn: boolean;
   email?: string;
   name?: string;
   avatarUrl?: string;
+  currentWorkbook?: Workbook;
+}
+
+// Workbook types
+export interface Workbook {
+  id: string;
+  name: string;
+  description?: string;
+  isDefault?: boolean;
+}
+
+export interface WorkbookListResponse {
+  workbooks: Workbook[];
+}
+
+export interface WorkbookSelectParams {
+  workbookId: string;
 }
 
 export interface RateLimitsReadResponse {
@@ -551,8 +568,9 @@ export interface AccountStatusNotification {
 }
 
 export interface LoginCompletedNotification {
+  loginId: string | null;
   success: boolean;
-  error?: string;
+  error: string | null;
 }
 
 export interface ErrorNotification {
@@ -600,6 +618,10 @@ export interface CodexAPI {
   logout(): Promise<void>;
   accountRead(): Promise<AccountReadResponse>;
   rateLimitsRead(): Promise<RateLimitsReadResponse>;
+  
+  // Workbook operations
+  workbookList(): Promise<WorkbookListResponse>;
+  workbookSelect(params: WorkbookSelectParams): Promise<void>;
   
   // Skills & Apps
   skillsList(): Promise<SkillsListResponse>;

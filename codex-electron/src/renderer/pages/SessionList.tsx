@@ -54,7 +54,13 @@ export const SessionList: React.FC = () => {
         includeArchived: showArchived !== 'active',
       });
 
-      let filtered = result.threads;
+      const rawThreads =
+        (result as any)?.threads ?? (result as any)?.items ?? (result as any)?.sessions ?? result;
+      const threads: ThreadMetadata[] = Array.isArray(rawThreads) ? rawThreads : [];
+      const resultTotal = (result as any)?.total;
+      const computedTotal = typeof resultTotal === 'number' ? resultTotal : threads.length;
+
+      let filtered = threads;
       
       // Client-side filtering for archived status
       if (showArchived === 'archived') {
@@ -68,14 +74,14 @@ export const SessionList: React.FC = () => {
         const search = searchText.toLowerCase();
         filtered = filtered.filter(
           (s) =>
-            s.preview.toLowerCase().includes(search) ||
+            (s.preview ?? '').toLowerCase().includes(search) ||
             s.name?.toLowerCase().includes(search) ||
-            s.cwd.toLowerCase().includes(search)
+            (s.cwd ?? '').toLowerCase().includes(search)
         );
       }
 
       setSessions(filtered);
-      setTotal(result.total);
+      setTotal(computedTotal);
     } catch (error) {
       console.error('Failed to load sessions:', error);
     } finally {

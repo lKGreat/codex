@@ -27,6 +27,7 @@ import {
   ConfigWriteParams,
   ConfigWriteBatchParams,
   LoginStartParams,
+  WorkbookSelectParams,
   ExecApprovalResponse,
   ApplyPatchApprovalResponse,
   RequestUserInputResponse,
@@ -299,9 +300,18 @@ export class WindowManager {
     const handleRequest = async <T>(
       _event: IpcMainInvokeEvent,
       method: string,
-      params?: unknown
+      params?: unknown,
+      fallbackMethod?: string
     ): Promise<T> => {
-      return appServer.send<T>(method, params);
+      try {
+        return await appServer.send<T>(method, params);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        if (fallbackMethod && message.includes('unknown variant')) {
+          return appServer.send<T>(fallbackMethod, params);
+        }
+        throw error;
+      }
     };
 
     // Initialize
@@ -317,7 +327,7 @@ export class WindowManager {
       handleRequest(_e, 'thread/resume', params)
     );
     ipcMain.handle('codex:thread/branch', (_e: IpcMainInvokeEvent, params: ThreadBranchParams) =>
-      handleRequest(_e, 'thread/branch', params)
+      handleRequest(_e, 'thread/fork', params, 'thread/branch')
     );
     ipcMain.handle('codex:thread/list', (_e: IpcMainInvokeEvent, params: ThreadListParams) =>
       handleRequest(_e, 'thread/list', params)
@@ -334,7 +344,7 @@ export class WindowManager {
       handleRequest(_e, 'thread/unarchive', params)
     );
     ipcMain.handle('codex:thread/setName', (_e: IpcMainInvokeEvent, params: ThreadSetNameParams) =>
-      handleRequest(_e, 'thread/setName', params)
+      handleRequest(_e, 'thread/name/set', params, 'thread/setName')
     );
     ipcMain.handle('codex:thread/rollback', (_e: IpcMainInvokeEvent, params: ThreadRollbackParams) =>
       handleRequest(_e, 'thread/rollback', params)
@@ -355,7 +365,7 @@ export class WindowManager {
 
     // Models
     ipcMain.handle('codex:models/list', (_e: IpcMainInvokeEvent) =>
-      handleRequest(_e, 'models/list')
+      handleRequest(_e, 'model/list', undefined, 'models/list')
     );
 
     // Config
@@ -363,32 +373,42 @@ export class WindowManager {
       handleRequest(_e, 'config/read')
     );
     ipcMain.handle('codex:config/write', (_e: IpcMainInvokeEvent, params: ConfigWriteParams) =>
-      handleRequest(_e, 'config/write', params)
+      handleRequest(_e, 'config/value/write', params, 'config/write')
     );
     ipcMain.handle(
       'codex:config/writeBatch',
       (_e: IpcMainInvokeEvent, params: ConfigWriteBatchParams) =>
-      handleRequest(_e, 'config/writeBatch', params)
+      handleRequest(_e, 'config/batchWrite', params, 'config/writeBatch')
     );
 
     // Auth
     ipcMain.handle('codex:login/start', async (_e: IpcMainInvokeEvent, params: LoginStartParams) => {
-      const result = await handleRequest<{ url?: string }>(_e, 'login/start', params);
+      const result = await handleRequest<{ type: string; authUrl?: string; loginId?: string }>(_e, 'account/login/start', params, 'login/start');
       // Open OAuth URL in browser if provided
-      if (result.url) {
-        shell.openExternal(result.url);
+      if (result.authUrl) {
+        shell.openExternal(result.authUrl);
       }
       return result;
     });
     ipcMain.handle('codex:login/cancel', (_e: IpcMainInvokeEvent) =>
-      handleRequest(_e, 'login/cancel')
+      handleRequest(_e, 'account/login/cancel', undefined, 'login/cancel')
     );
-    ipcMain.handle('codex:logout', (_e: IpcMainInvokeEvent) => handleRequest(_e, 'logout'));
+    ipcMain.handle('codex:logout', (_e: IpcMainInvokeEvent) =>
+      handleRequest(_e, 'account/logout', undefined, 'logout')
+    );
     ipcMain.handle('codex:account/read', (_e: IpcMainInvokeEvent) =>
       handleRequest(_e, 'account/read')
     );
     ipcMain.handle('codex:rateLimits/read', (_e: IpcMainInvokeEvent) =>
-      handleRequest(_e, 'rateLimits/read')
+      handleRequest(_e, 'account/rateLimits/read', undefined, 'rateLimits/read')
+    );
+
+    // Workbook operations
+    ipcMain.handle('codex:workbook/list', (_e: IpcMainInvokeEvent) =>
+      handleRequest(_e, 'account/workbook/list', undefined, 'workbook/list')
+    );
+    ipcMain.handle('codex:workbook/select', (_e: IpcMainInvokeEvent, params: WorkbookSelectParams) =>
+      handleRequest(_e, 'account/workbook/select', params, 'workbook/select')
     );
 
     // Skills & Apps
@@ -396,7 +416,7 @@ export class WindowManager {
       handleRequest(_e, 'skills/list')
     );
     ipcMain.handle('codex:apps/list', (_e: IpcMainInvokeEvent) =>
-      handleRequest(_e, 'apps/list')
+      handleRequest(_e, 'app/list', undefined, 'apps/list')
     );
 
     // Approval responses
