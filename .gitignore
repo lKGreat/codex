@@ -91,3 +91,19 @@ CHANGELOG.ignore.md
 __pycache__/
 *.pyc
 
+# Rust / Cargo
+target/
+target-*/
+.rustc_info.json
+rust-analyzer*.log
+
+# Windows / Visual Studio
+.vs/
+Desktop.ini
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.VC.db
+*.VC.VC.opendb
+

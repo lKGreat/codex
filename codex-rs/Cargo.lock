@@ -5960,8 +5960,6 @@ dependencies = [
 [[package]]
 name = "rama-boring-sys"
 version = "0.5.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "421ebb40444a6d740f867a5055a710a73e7cd74b9b389583b45e9b29d1330465"
 dependencies = [
  "bindgen",
  "cmake",
