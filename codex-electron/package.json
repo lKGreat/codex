@@ -1,0 +1,59 @@
+{
+  "name": "@openai/codex-electron",
+  "version": "0.0.0-dev",
+  "description": "Codex Desktop GUI - Electron-based desktop application for Codex AI coding agent",
+  "license": "Apache-2.0",
+  "main": "dist/main/index.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/openai/codex.git",
+    "directory": "codex-electron"
+  },
+  "scripts": {
+    "dev": "vite",
+    "dev:electron": "tsc -p tsconfig.main.json && electron .",
+    "dev:all": "concurrently \"pnpm dev\" \"pnpm dev:electron\"",
+    "build": "tsc -p tsconfig.main.json && vite build",
+    "build:codex": "cd ../codex-rs && cargo build --release -p codex-cli",
+    "package": "pnpm build && electron-builder",
+    "package:all": "pnpm build:codex && pnpm package",
+    "codex:generate-types": "codex app-server generate-ts --out src/types/generated",
+    "clean": "rm -rf dist out",
+    "format": "prettier --check .",
+    "format:fix": "prettier --write .",
+    "lint": "eslint src --ext .ts,.tsx",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "antd": "^5.22.0",
+    "@ant-design/icons": "^5.5.0",
+    "electron-squirrel-startup": "^1.0.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.28.0",
+    "react-markdown": "^9.0.1",
+    "react-diff-viewer-continued": "^3.4.0",
+    "rehype-highlight": "^7.0.0",
+    "remark-gfm": "^4.0.0",
+    "electron-store": "^8.2.0",
+    "uuid": "^10.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.18",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@types/uuid": "^10.0.0",
+    "@vitejs/plugin-react": "^4.3.3",
+    "concurrently": "^9.1.0",
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8",
+    "eslint": "^9.15.0",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.2",
+    "vite": "^5.4.11"
+  },
+  "packageManager": "pnpm@10.28.2+sha512.41872f037ad22f7348e3b1debbaf7e867cfd448f2726d9cf74c08f19507c31d2c8e7a11525b983febc2df640b5438dee6023ebb1f84ed43cc2d654d2bc326264"
+}

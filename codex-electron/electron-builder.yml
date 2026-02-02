@@ -1,0 +1,69 @@
+appId: com.openai.codex-electron
+productName: Codex Desktop
+copyright: Copyright © 2024-2026 OpenAI
+
+directories:
+  output: out
+  buildResources: resources
+
+files:
+  - dist/**/*
+  - package.json
+
+extraResources:
+  # Windows
+  - from: ../codex-rs/target/release/codex.exe
+    to: codex.exe
+    filter:
+      - "**/*"
+    platform: win32
+  # macOS
+  - from: ../codex-rs/target/release/codex
+    to: codex
+    filter:
+      - "**/*"
+    platform: darwin
+  # Linux
+  - from: ../codex-rs/target/release/codex
+    to: codex
+    filter:
+      - "**/*"
+    platform: linux
+
+mac:
+  category: public.app-category.developer-tools
+  icon: resources/icons/icon.icns
+  target:
+    - dmg
+    - zip
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: resources/entitlements.mac.plist
+  entitlementsInherit: resources/entitlements.mac.plist
+
+win:
+  icon: resources/icons/icon.ico
+  target:
+    - nsis
+    - portable
+  requestedExecutionLevel: asInvoker
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Codex Desktop
+
+linux:
+  icon: resources/icons
+  category: Development
+  target:
+    - AppImage
+    - deb
+  maintainer: OpenAI
+
+publish:
+  provider: github
+  owner: openai
+  repo: codex
